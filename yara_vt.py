@@ -173,22 +173,22 @@ if __name__ == '__main__':
     vt_group = parser.add_argument_group('VirusTotal')
 
     yara_group.add_argument('-r', '--rules',
-        help='yara rules directory',
+        help='Yara rules directory',
         action='store',
         required=True)
 
     yara_group.add_argument('-s', '---samples',
-        help='samples directory to scan',
+        help='Samples directory to scan',
         action='store',
         required=True)
 
     vt_group.add_argument('-k', '--key',
         action='store',
-        help='virustotal API key',
+        help='VirusTotal API key',
         required=False)
 
     vt_group.add_argument('-c', '--comment',
-        help='submit virustotal comments',
+        help='Submit Yara match names as VirusTotal comments',
         action='store_true',
         default=False,
         required=True)
