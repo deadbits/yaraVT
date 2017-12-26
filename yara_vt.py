@@ -27,12 +27,17 @@ urls = {
 no_report = 'The requested resource is not among the finished, queued or pending scans'
 report_exists = 'Scan finished, information embedded'
 
+# default VT comment prefix
+# change this if you want, just know the rule(s) will be added to the end as a comma separated list
+# e.g., "Yara rule hits: RuleName1, RuleName2"
+vt_comment = 'Yara rule hits: '
+
 
 def check_report(file_hash):
     """ Check if VT report exists for given file hash
 
     @param file_hash: MD5 hash of file
-    @type param
+    @type str
 
     @return: True if found, False if not
     @rtype bool
@@ -58,6 +63,14 @@ def check_report(file_hash):
 
 
 def add_comment(file_hash, comment):
+    """ Submit a comment to VT for a given file hash
+
+    @param file_hash: MD5 hash of file
+    @type str
+
+    @param comment: Comment string that gets submitted
+    @type str
+    """
     params = {
         'apikey': api_key,
         'resource': file_hash,
@@ -77,7 +90,14 @@ def add_comment(file_hash, comment):
 
 
 def load_directory(sample_dir):
-    """ Return absolute paths of files in a directory with a size greater than zero """
+    """ Return absolute paths of files in a directory with a size greater than zero
+
+    @param sample_dir: Directory path to look in
+    @type str
+
+    @return files: list of absolute paths to files found
+    @rtype list
+    """
     files = []
 
     contents = os.listdir(sample_dir)
@@ -90,7 +110,14 @@ def load_directory(sample_dir):
 
 
 def hash_file(file_path):
-    """ Get md5 hash of file object """
+    """ Get md5 hash of file object
+
+    @param file_path: Path of file to obtain MD5 hash of
+    @type str
+
+    @return: md5 hexdigest
+    @rtype str
+    """
     fin = open(file_path, 'rb')
     m = hashlib.md5()
     while True:
@@ -142,26 +169,29 @@ class Yara(object):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Scan directory with Yara and submit matches to VirusTotal samples as comments')
 
-    parser.add_argument('-c', '--comment',
+    yara_group = parser.add_argument_group('Yara')
+    vt_group = parser.add_argument_group('VirusTotal')
+
+    yara_group.add_argument('-r', '--rules',
+        help='yara rules directory',
+        action='store',
+        required=True)
+
+    yara_group.add_argument('-s', '---samples',
+        help='samples directory to scan',
+        action='store',
+        required=True)
+
+    vt_group.add_argument('-k', '--key',
+        action='store',
+        help='virustotal API key',
+        required=False)
+
+    vt_group.add_argument('-c', '--comment',
         help='submit virustotal comments',
         action='store_true',
         default=False,
         required=True)
-
-    parser.add_argument('--samples',
-        help='path to samples for scanning',
-        action='store',
-        required=True)
-
-    parser.add_argument('--rules',
-        help='path to yara rules directory',
-        action='store',
-        required=True)
-
-    parser.add_argument('--key',
-        action='store',
-        help='virustotal API key',
-        required=False)
 
     args = parser.parse_args()
 
@@ -204,5 +234,3 @@ if __name__ == '__main__':
             if check_report[res['hash']]:
                 cmt = 'This file matched my Yara signatures: %s' % ', '.join(res['yara'])
                 add_comment(res['hash'], cmt)
-
-    print '[+] Done!'
